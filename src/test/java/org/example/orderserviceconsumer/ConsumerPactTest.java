@@ -70,4 +70,33 @@ class ConsumerPactTest {
         assertTrue(json.has("name"));
         assertTrue(json.has("email"));
     }
+
+
+    @Pact(provider = "UserService", consumer = "order_service_consumer")
+    public V4Pact userNotFoundPact(PactBuilder builder) {
+        return builder
+                .given("User with id 999 does not exist")
+                .expectsToReceiveHttpInteraction("Request for non-existing user", http ->
+                        http.withRequest(req -> req
+                                        .method("GET")
+                                        .path("/users/999")
+                                )
+                                .willRespondWith(res -> res
+                                        .status(404)
+                                )
+                )
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "userNotFoundPact")
+    void testUserNotFound(MockServer mockServer) throws Exception {
+        ClassicHttpResponse response = (ClassicHttpResponse) Request
+                .get(mockServer.getUrl() + "/users/999")
+                .execute()
+                .returnResponse();
+
+        assertTrue(response.getCode() == 404);
+    }
+
 }
