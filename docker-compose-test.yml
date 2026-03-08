@@ -1,0 +1,129 @@
+services:
+  postgres:
+    image: postgres@sha256:1ffc019dae94eca6b09a49ca67d37398951346de3c3d0cfe23d8d4ca33da83fb
+    healthcheck:
+      test: ["CMD-SHELL", "psql postgres --command 'select 1' -U postgres"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+
+  pact-broker:
+    image: pactfoundation/pact-broker
+    depends_on:
+      - postgres
+    environment:
+      PACT_BROKER_DATABASE_ADAPTER: postgres
+      PACT_BROKER_DATABASE_HOST: postgres
+      PACT_BROKER_DATABASE_USERNAME: postgres
+      PACT_BROKER_DATABASE_PASSWORD: postgres
+      PACT_BROKER_DATABASE_NAME: postgres
+    ports:
+      - "9292:9292"
+
+  init-postgres:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_ADAPTER: docker_compose_postgres
+      PACT_BROKER_DATABASE_HOST: postgres
+      PACT_BROKER_DATABASE_USERNAME: postgres
+      PACT_BROKER_DATABASE_PASSWORD: postgres
+      PACT_BROKER_DATABASE_NAME: postgres
+      PACT_BROKER_HIDE_PACTFLOW_MESSAGES: "true"
+    volumes:
+      - ./lib:/home/lib
+      - ./db:/home/db
+      - ./tasks:/home/tasks
+      - ./Rakefile:/home/Rakefile
+      - ./config:/home/config
+    command: dockerize --wait tcp://postgres:5432 /home/init-db.sh
+
+  mysql:
+    image: arm64v8/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: pact_broker
+      MYSQL_DATABASE: pact_broker
+      MYSQL_USER: pact_broker
+      MYSQL_PASSWORD: pact_broker
+    ports:
+      - "3307:3306"
+
+  init-mysql:
+    build: .
+    depends_on:
+      - mysql
+    environment:
+      DATABASE_ADAPTER: docker_compose_mysql
+      PACT_BROKER_HIDE_PACTFLOW_MESSAGES: "true"
+    volumes:
+      - ./lib:/home/lib
+      - ./db:/home/db
+      - ./tasks:/home/tasks
+      - ./Rakefile:/home/Rakefile
+      - ./config:/home/config
+    command: dockerize --wait tcp://mysql:3306 /home/init-db.sh
+
+  postgres-tests:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_ADAPTER: docker_compose_postgres
+      PACT_BROKER_HIDE_PACTFLOW_MESSAGES: "true"
+    volumes:
+      - ./lib:/home/lib
+      - ./spec:/home/spec
+      - ./db:/home/db
+      - ./config.ru:/home/config.ru
+      - ./tasks:/home/tasks
+      - ./Rakefile:/home/Rakefile
+      - ./config:/home/config
+      - ./.rspec:/home/.rspec
+      - ./.rubocop:/home/.rubocop
+      - ./.gitignore:/home/.gitignore
+      - ./public:/home/public
+      - ./docs:/home/docs
+
+  mysql-tests:
+    build: .
+    depends_on:
+      - mysql
+    environment:
+      DATABASE_ADAPTER: docker_compose_mysql
+      PACT_BROKER_HIDE_PACTFLOW_MESSAGES: "true"
+    volumes:
+      - ./lib:/home/lib
+      - ./spec:/home/spec
+      - ./db:/home/db
+      - ./config.ru:/home/config.ru
+      - ./tasks:/home/tasks
+      - ./Rakefile:/home/Rakefile
+      - ./config:/home/config
+      - ./.rspec:/home/.rspec
+      - ./.rubocop:/home/.rubocop
+      - ./.gitignore:/home/.gitignore
+      - ./public:/home/public
+      - ./docs:/home/docs
+
+  sqlite-tests:
+    build: .
+    environment:
+      PACT_BROKER_HIDE_PACTFLOW_MESSAGES: "true"
+    volumes:
+      - ./lib:/home/lib
+      - ./spec:/home/spec
+      - ./db:/home/db
+      - ./config.ru:/home/config.ru
+      - ./tasks:/home/tasks
+      - ./Rakefile:/home/Rakefile
+      - ./config:/home/config
+      - ./.rspec:/home/.rspec
+      - ./.rubocop:/home/.rubocop
+      - ./.gitignore:/home/.gitignore
+      - ./public:/home/public
+      - ./docs:/home/docs
