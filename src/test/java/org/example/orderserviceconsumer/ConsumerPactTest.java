@@ -24,7 +24,10 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(PactConsumerTestExt.class)
-@PactTestFor(providerName = "UserService", port = "8085",pactVersion = PactSpecVersion.V4)
+@PactTestFor(
+        providerName = "UserService",
+        port = "8085",
+        pactVersion = PactSpecVersion.V4)
 class ConsumerPactTest {
 
     @Pact(provider = "UserService", consumer = "order_service_consumer")
