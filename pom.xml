@@ -106,6 +106,18 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>au.com.dius.pact.provider</groupId>
+                <artifactId>maven</artifactId>
+                <version>4.1.0</version>
+                <configuration>
+                    <pactBrokerUrl>http://localhost:9292</pactBrokerUrl>
+                    <projectVersion>1.0.1</projectVersion>
+                    <tags>
+                        <tag>feature_02</tag>
+                    </tags>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
